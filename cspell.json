@@ -1,0 +1,6 @@
+{
+  "version": "0.2",
+  "allowCompoundWords": true,
+  "ignorePaths": [".devcontainer", ".vscode", "jsx_runtime/types.d.ts"],
+  "words": ["Deno", "jsxs", "miguelbogota"]
+}

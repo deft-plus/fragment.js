@@ -1,0 +1,19 @@
+{
+  "name": "Fragment.js",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "eamodio.gitlens",
+        "PKief.material-icon-theme",
+        "streetsidesoftware.code-spell-checker",
+        "VisualStudioExptTeam.vscodeintellicode",
+        "denoland.vscode-deno"
+      ]
+    }
+  },
+  "remoteUser": "root",
+  "shutdownAction": "stopContainer"
+}

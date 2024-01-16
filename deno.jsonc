@@ -1,0 +1,62 @@
+{
+  "tasks": {
+    // should the tag start with 'v'? - No
+    // push 'origin' on 'latest' branch to remote repository? - Yes
+    "publish": "publish"
+  },
+  "scopes": {},
+  "imports": {
+    // Internal Imports
+    "@app_env.ts": "./@environment.ts",
+    "@app_deps.ts": "./@deps.ts",
+    "@app_deps_testing.ts": "./@deps_testing.ts",
+    "@app_types.ts": "./types/mod.ts",
+
+    // JSX Runtime
+    "jsx_runtime/jsx-runtime": "./jsx_runtime/mod.ts",
+    "jsx_runtime/jsx-dev-runtime": "./jsx_runtime/mod.ts"
+  },
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "dom.extras", "deno.ns"],
+    "allowJs": false,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "jsx": "precompile",
+    "jsxImportSource": "jsx_runtime",
+    "types": ["./types/mod.ts"]
+  },
+  "fmt": {
+    "files": {
+      "include": ["./"]
+    },
+    "options": {
+      "useTabs": false,
+      "lineWidth": 100,
+      "indentWidth": 2,
+      "singleQuote": true,
+      "proseWrap": "always"
+    }
+  },
+  "lint": {
+    "rules": {
+      "tags": ["recommended"],
+      "include": [
+        "ban-untagged-todo",
+        "camelcase",
+        "eqeqeq",
+        "no-eval",
+        "no-external-import",
+        "no-non-null-assertion",
+        "no-non-null-asserted-optional-chain",
+        "no-sparse-arrays"
+      ]
+    }
+  }
+}
