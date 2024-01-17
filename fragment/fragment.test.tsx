@@ -1,5 +1,5 @@
 import { assertEquals, describe, it } from '@app_deps_testing.ts';
-import { fragment } from './fragment.jsx';
+import { fragment } from './fragment.tsx';
 
 describe('fragment()', () => {
   it('should pass', () => {
