@@ -1,6 +1,6 @@
 import { fragment } from '@fragment.js';
 
-import { Counter } from './counter.tsx';
+import { Counter } from './counter.fragment.tsx';
 
 export const Root = fragment({
   name: 'app-root',

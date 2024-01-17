@@ -2,7 +2,7 @@
 import { DOMParser } from 'https://deno.land/x/deno_dom@v0.1.41-alpha-artifacts/deno-dom-wasm.ts';
 
 import { root } from '@fragment.js';
-import { Root } from './fragments/root.tsx';
+import { Root } from './fragments/root.fragment.tsx';
 
 const doc = new DOMParser().parseFromString(
   `<!DOCTYPE html>
