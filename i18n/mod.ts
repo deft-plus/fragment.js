@@ -327,9 +327,11 @@ type ReturnTranslations<
       ) => string;
 };
 
+// deno-lint-ignore no-explicit-any
 type FindIndex<TTranslations extends any[], TNamespace extends any, I extends any[] = []> =
   TTranslations extends [infer Head, ...infer Rest]
     ? Head extends { [i18nKey]: { namespace: TNamespace } } ? I['length']
+      // deno-lint-ignore no-explicit-any
     : FindIndex<Rest, TNamespace, [...I, any]>
     : never;
 
