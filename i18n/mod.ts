@@ -1,3 +1,6 @@
+import { type PluralizationResolver, pluralizationResolver } from './pluralization_resolver.ts';
+import { defaultFormatters } from './formatter.ts';
+
 /** Internal symbol to mark the object with metadata. */
 const i18nKey = Symbol('__internal_i18n_meta__');
 
@@ -7,6 +10,7 @@ export interface I18nConfig<
   TFormatters extends Record<PropertyKey, unknown> = typeof defaultFormatters,
 > {
   languages?: [...TLanguages];
+  defaultLanguage?: TLanguages[number];
   formatters?: TFormatters;
   pluralizationResolver?: PluralizationResolver;
 }
@@ -29,8 +33,9 @@ class I18n<
   constructor(config?: I18nConfig<TLanguages, TFormatters>) {
     this.#config = {
       languages: ['en'] as TLanguages,
+      defaultLanguage: config?.languages?.[0] ?? 'en',
       formatters: defaultFormatters as unknown as TFormatters,
-      pluralizationResolver: defaultPluralizationResolver,
+      pluralizationResolver: pluralizationResolver.english,
       ...config,
     };
   }
@@ -48,7 +53,7 @@ class I18n<
     },
   ) {
     const { namespace, resources } = options;
-    const { formatters, languages: globalLanguages } = this.#config;
+    const { formatters, languages: globalLanguages, defaultLanguage } = this.#config;
 
     const rawTranslations = resources(formatters);
 
@@ -57,7 +62,7 @@ class I18n<
     /** Function to configure a global config to use the translations. */
     const useTranslation = (options?: UseTranslationOptions<TLanguages>) => {
       const optionsWithDefaults = {
-        lang: globalLanguages[0],
+        lang: defaultLanguage ?? globalLanguages[0],
         ...options,
       };
       const globalLang = optionsWithDefaults.lang;
@@ -83,7 +88,7 @@ class I18n<
    * Merges the given translations with its own namespace.
    */
   public merge<TTranslations extends InternalI18n<TLanguages>[]>(translations: [...TTranslations]) {
-    const { languages: globalLanguages } = this.#config;
+    const { languages: globalLanguages, defaultLanguage } = this.#config;
 
     const useTranslation = <
       TNamespace extends AllNamespaces<TLanguages, TTranslations> | undefined = undefined,
@@ -91,7 +96,7 @@ class I18n<
       options?: UseTranslationOptionsMerge<TLanguages, TNamespace>,
     ) => {
       const { lang, namespace } = {
-        lang: globalLanguages[0],
+        lang: defaultLanguage ?? globalLanguages[0],
         namespace: undefined,
         ...options,
       };
@@ -207,59 +212,6 @@ class I18n<
     return runtimeExecution;
   }
 }
-
-/** Default formatters to use inside of a translation value. */
-export const defaultFormatters = {
-  /** Transforms the given string to uppercase. */
-  upper(v?: string | null) {
-    return v?.toUpperCase() ?? '';
-  },
-  /** Transforms the given string to lowercase. */
-  lower(v?: string | null) {
-    return v?.toLowerCase() ?? '';
-  },
-  /** Capitalizes the given string. */
-  capitalize(v?: string | null) {
-    return v ? `${v.charAt(0).toUpperCase()}${v.slice(1)}` : '';
-  },
-  /** Transforms the given string to title case. */
-  title(v?: string | null) {
-    return v?.replace(/(^\w|\s\w)(\S*)/g, (_, m1, m2) => m1.toUpperCase() + m2.toLowerCase()) ?? '';
-  },
-};
-
-/** Default resolver to get the right pluralization. */
-export const defaultPluralizationResolver: PluralizationResolver = (values, count) => {
-  if (values === null || values === undefined) {
-    return '';
-  }
-
-  if (typeof values === 'string') {
-    return values;
-  }
-
-  if (count === 0 || count === undefined || count === null) {
-    return values.zero ?? values.default;
-  }
-
-  if (count === 1) {
-    return values.one ?? values.default;
-  }
-
-  if (count === 2) {
-    return values.two ?? values.default;
-  }
-
-  if (count >= 3 && count <= 6) {
-    return values.few ?? values.default;
-  }
-
-  if (count >= 7 && count <= 10) {
-    return values.many ?? values.default;
-  }
-
-  return values.other ?? values.many ?? values.default;
-};
 
 /** Value of a translation. */
 export interface TranslationValue<TLang extends string> {
@@ -422,12 +374,6 @@ export interface UseTranslationOptionsMerge<TLanguages extends string[], TNamesp
   lang?: TLanguages[number];
   namespace?: TNamespace;
 }
-
-/** Pluralization resolver to pass to the translations. */
-export type PluralizationResolver = (
-  values: TranslationValue<string>['value'] | null | undefined,
-  count?: number,
-) => string;
 
 /** Base options for the runtime. */
 export type RuntimeOptions<TLanguages extends string[]> = {

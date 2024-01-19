@@ -67,9 +67,10 @@ describe('i18n()', () => {
   });
 
   it('should return the right language with right priority', () => {
-    const i18nFactory = i18n({ languages: ['en', 'es'] });
+    const i18nFactory1 = i18n({ languages: ['en', 'es'] });
+    const i18nFactory2 = i18n({ languages: ['en', 'es'], defaultLanguage: 'es' });
 
-    const useValidI18n = i18nFactory.create({
+    const useValidI18n1 = i18nFactory1.create({
       namespace: 'valid',
       resources: () => ({
         'test': () => [
@@ -79,15 +80,34 @@ describe('i18n()', () => {
       }),
     });
 
-    const tEnglish = useValidI18n();
-    const tSpanish = useValidI18n({ lang: 'es' });
+    const useValidI18n2 = i18nFactory2.create({
+      namespace: 'valid',
+      resources: () => ({
+        'test': () => [
+          { lang: 'en', value: 'test' },
+          { lang: 'es', value: 'test in Spanish' },
+        ],
+      }),
+    });
 
-    assertEquals(tEnglish['test'](), 'test');
-    assertEquals(tSpanish['test'](), 'test in Spanish');
+    const tEnglish1 = useValidI18n1();
+    const tSpanish1 = useValidI18n1({ lang: 'es' });
+
+    const tEnglish2 = useValidI18n2();
+    const tSpanish2 = useValidI18n2({ lang: 'en' });
+
+    assertEquals(tEnglish1['test'](), 'test');
+    assertEquals(tSpanish1['test'](), 'test in Spanish');
+
+    assertEquals(tEnglish2['test'](), 'test in Spanish');
+    assertEquals(tSpanish2['test'](), 'test');
 
     // Inline language should have priority.
-    assertEquals(tEnglish['test']({ lang: 'es' }), 'test in Spanish');
-    assertEquals(tSpanish['test']({ lang: 'en' }), 'test');
+    assertEquals(tEnglish1['test']({ lang: 'es' }), 'test in Spanish');
+    assertEquals(tSpanish1['test']({ lang: 'en' }), 'test');
+
+    assertEquals(tEnglish1['test']({ lang: 'es' }), 'test in Spanish');
+    assertEquals(tSpanish1['test']({ lang: 'en' }), 'test');
   });
 
   it('should allow to pass custom formatters', () => {
