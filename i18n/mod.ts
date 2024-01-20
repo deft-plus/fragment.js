@@ -197,7 +197,7 @@ class I18n<
       }
 
       const translationsArray = fn(valuesToPass);
-      const translatedValue = translationsArray.find((t) => t.lang === (lang ?? 'en'))?.value;
+      const translatedValue = translationsArray.find((t) => t.lang === lang)?.value;
 
       if (!translatedValue) {
         const availableLanguages = allLanguages.map((lang) => `"${lang}"`).join(', ');
@@ -246,7 +246,7 @@ type AllNamespaces<
 interface ResolveTranslationDefaults<TLanguages extends string[]> {
   key: string;
   fn: TranslationFn<TLanguages>;
-  globalLang?: TLanguages[number];
+  globalLang: TLanguages[number];
   allLanguages: TLanguages;
 }
 
