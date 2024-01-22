@@ -1,6 +1,6 @@
 # Module `signal`.
 
-This module contains the an implementation of the "signal" concept. A signal is a value which is
+This module contains the implementation of the "signal" function. A signal is a value which is
 "reactive", meaning it can notify interested consumers when it changes. There are many different
 implementations of this concept, with different designs for how these notifications are subscribed
 to and propagated, how cleanup/un-subscription works, how dependencies are tracked, etc.
