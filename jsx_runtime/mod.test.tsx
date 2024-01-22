@@ -10,4 +10,4 @@ function Hello(props: { name: string }) {
   );
 }
 
-console.log(<Hello name="hello" />);
+console.log(<Hello name='hello' />);

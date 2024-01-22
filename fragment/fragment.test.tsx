@@ -6,6 +6,7 @@ describe('fragment()', () => {
     type TestAttrs = {
       test: string;
       com: () => { user: string };
+      com3: () => { user: string };
     };
 
     const Test = fragment<TestAttrs>({
@@ -13,15 +14,18 @@ describe('fragment()', () => {
       wrapper: 'div',
       attributes: {
         test: 'test',
-        com: ({ test }) => {
-          console.log(test);
-          return { user: 'test' };
-        },
+        com: () => ({ user: '_test' }),
+        com3: ({ com }) => ({ user: 'test' + com().user }),
       },
-      content: () => <div>Test</div>,
+      content: ({ test, com, com3 }) => (
+        <div class='hello'>
+          <a href={com().user}>user1</a>
+          <a href={com3().user}>user2</a>
+        </div>
+      ),
     });
 
-    const test = <Test test="asdasd" />;
+    const test = <Test test='hello' />;
 
     console.log(test);
 

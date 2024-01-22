@@ -145,6 +145,11 @@ const Element = fragment<ElementAttrs>({
     // Computed attributes use signals to subscribe to changes in
     // the attributes. This allows fine grained control over when
     // the computed attribute should be recomputed.
+    //
+    // Keep in mind that computed attributes can access to all of
+    // primitive attributes and only the computed attributes that
+    // are defined before (Object keys order). This avoids the
+    // circular dependency problem.
     world: ({ hello }) => hello().toLowerCase(),
   },
   content: ({ world }) => {

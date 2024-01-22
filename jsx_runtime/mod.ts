@@ -1,5 +1,7 @@
 import './types.d.ts';
 import { isFragment } from '../fragment/api.ts';
+import { raw } from './html_utils.ts';
+import { html } from './html_utils.ts';
 
 function jsx(
   element: string | ((...args: any) => any),
@@ -13,6 +15,8 @@ function jsx(
 
   const funElement = typeof element === 'function' && element(props);
   const { children, ...otherProps } = props ?? {};
+
+  console.log(funElement.children);
 
   const res = funElement
     ? {
@@ -33,15 +37,10 @@ function jsx(
   return res;
 }
 
-const jsxTemplate = (template: string[], ...args: unknown[]) => {
-  const res = template.reduce((acc, cur, i) => {
-    return `${acc}${cur}${args[i] ?? ''}`;
-  }, '');
-  return res;
-};
+const jsxTemplate = html;
 
-const jsxEscape = (unsafe: unknown) => unsafe;
+const jsxAttr = (name: string, value: string) => raw(name + '="' + html`${value}` + '"');
 
-const jsxAttr = (name: string, value: unknown) => ` ${name}="${value}"`;
+const jsxEscape = (unsafe: string) => unsafe;
 
 export { jsx, jsx as jsxs, jsxAttr, jsxEscape, jsxTemplate };
