@@ -1,15 +1,15 @@
 # Module `signal`.
 
-This module contains the an implementation of the "signal" concept. A signal is a value which is
+This module contains the implementation of the "signal" function. A signal is a value which is
 "reactive", meaning it can notify interested consumers when it changes. There are many different
 implementations of this concept, with different designs for how these notifications are subscribed
 to and propagated, how cleanup/un-subscription works, how dependencies are tracked, etc.
 
 ## Conceptual surface
 
-Signals are zero-argument functions (`() => T`). When executed, they return the current value of
-the signal. Executing signals does not trigger side effects, though it may lazily recompute
-intermediate values (lazy memoization).
+Signals are zero-argument functions (`() => T`). When executed, they return the current value of the
+signal. Executing signals does not trigger side effects, though it may lazily recompute intermediate
+values (lazy memoization).
 
 Particular contexts (such as template expressions) can be _reactive_. In such contexts, executing a
 signal will return the value, but also register the signal as a dependency of the context in
@@ -59,8 +59,8 @@ If the equality function determines that 2 values are equal it will:
 ### Computed values: `() => signal`
 
 We can create new expressions that depend on signals by wrapping a signal in a function. A function
-that accesses a signal is effectively also a signal: when the wrapped signal changes, it will
-notify its consumers, which will in turn re-execute the function to produce a new value.
+that accesses a signal is effectively also a signal: when the wrapped signal changes, it will notify
+its consumers, which will in turn re-execute the function to produce a new value.
 
 ```typescript
 const counter = signal(0);
@@ -74,8 +74,8 @@ expression, and can depend on any number of signals. The function can also be a 
 
 ### Declarative memoized values: `signal.memo()`
 
-`signal.memo()` creates a memoized signal, which calculates its value from the values of some
-number of input signals.
+`signal.memo()` creates a memoized signal, which calculates its value from the values of some number
+of input signals.
 
 ```typescript
 const counter = signal(0);
@@ -189,8 +189,8 @@ to reach all affected nodes in the graph without the possibility of observing in
 glitchy states.
 
 Once this change propagation has completed (synchronously), the second phase can begin. In this
-second phase, signal values may be read by the application or framework, triggering recomputation
-of any needed derived values which were previously invalidated.
+second phase, signal values may be read by the application or framework, triggering recomputation of
+any needed derived values which were previously invalidated.
 
 We refer to this as the "push/pull" algorithm: "dirtiness" is eagerly _pushed_ through the graph
 when a source signal is changed, but recalculation is performed lazily, only when values are
@@ -198,9 +198,9 @@ _pulled_ by reading their signals.
 
 ## Dynamic Dependency Tracking
 
-When a reactive context operation (for example, an `effect`'s side effect function) is executed,
-the signals that it reads are tracked as dependencies. However, this may not be the same set of
-signals from one execution to the next. For example, this computed signal:
+When a reactive context operation (for example, an `effect`'s side effect function) is executed, the
+signals that it reads are tracked as dependencies. However, this may not be the same set of signals
+from one execution to the next. For example, this computed signal:
 
 ```typescript
 const dynamic = signal.memo(() => useA() ? dataA() : dataB());
