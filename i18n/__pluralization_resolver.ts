@@ -1,4 +1,4 @@
-import { type TranslationValue } from './mod.ts';
+import { type TranslationValue } from './__mod.ts';
 
 /**
  * Resolver to get the right pluralization in the i18n translations.
