@@ -29,8 +29,16 @@ export function parseText(rawText: string): ParsedMessage {
 
       // If the content starts with a bracket, it's a plural part.
       if (content.startsWith('{')) {
-        const pluralPart = parsePluralPart(removeOuterBrackets(content), lastNumberKeyForPlural);
-        return formatValues(pluralPart);
+        const [pluralPart, lastKey] = parsePluralPart(
+          removeOuterBrackets(content),
+          lastNumberKeyForPlural,
+        );
+
+        if (lastKey) {
+          lastNumberKeyForPlural = lastKey;
+        }
+
+        return formatValues(pluralPart, ['other']);
       }
 
       // Otherwise, it's a parameter part.
@@ -60,7 +68,7 @@ const removeOuterBrackets = (text: string) => text.substring(1, text.length - 1)
  * Helper function to format the values of an object, array or string.
  * Removes empty values and trims strings.
  */
-const formatValues = (part: unknown): unknown => {
+const formatValues = (part: unknown, allowedEmptyKeys: string[] = []): unknown => {
   // If the input is a string, trim it.
   if (typeof part === 'string') {
     return part.trim();
@@ -74,20 +82,21 @@ const formatValues = (part: unknown): unknown => {
   // If the input is an array, filter and recursively call the function on each element.
   if (Array.isArray(part)) {
     return part
-      .map((item) => formatValues(item))
+      .map((item) => formatValues(item, allowedEmptyKeys))
       .filter((item) => !!item);
   }
 
   // If the input is an object, filter and recursively call the function on each property.
   return Object.entries(part)
-    .filter(([, value]) =>
-      typeof value !== 'undefined' &&
-      value !== '' &&
-      value !== null &&
-      value !== undefined
+    .filter(([key, value]) =>
+      allowedEmptyKeys.includes(key) ||
+      (typeof value !== 'undefined' &&
+        value !== '' &&
+        value !== null &&
+        value !== undefined)
     )
     .reduce((acc, [key, value]) => {
-      acc[key] = typeof value === 'string' ? value.trim() : formatValues(value);
+      acc[key] = typeof value === 'string' ? value.trim() : formatValues(value, allowedEmptyKeys);
       return acc;
     }, {} as Record<string, unknown>);
 };
@@ -142,7 +151,7 @@ const parseParamenterPart = (text: string): ParameterPart => {
 /**
  * Helper function to parse a plural part from a string.
  */
-const parsePluralPart = (content: string, lastAccessor: string): PluralPart => {
+const parsePluralPart = (content: string, lastAccessor: string): [PluralPart, string?] => {
   let [key, values] = content.split(':') as [string, string?];
 
   // This is a special case where the key is not provided, but the values are provided.
@@ -152,6 +161,10 @@ const parsePluralPart = (content: string, lastAccessor: string): PluralPart => {
     key = lastAccessor;
   }
 
+  if (!key) {
+    throw new Error('Plural key is not provided.');
+  }
+
   const entries = values.split('|');
   const [zero, one, two, few, many, rest] = entries;
 
@@ -159,16 +172,16 @@ const parsePluralPart = (content: string, lastAccessor: string): PluralPart => {
   const kind = 'plural';
 
   if (entriesCount === 1) {
-    return { kind, key, other: zero } as PluralPart;
+    return [{ kind, key, other: zero }, key];
   }
   if (entriesCount === 2) {
-    return { kind, key, one: zero, other: one } as PluralPart;
+    return [{ kind, key, one: zero, other: one }, key];
   }
   if (entriesCount === 3) {
-    return { kind, key, zero, one, other: two } as PluralPart;
+    return [{ kind, key, zero, one, other: two }, key];
   }
 
-  return { kind, key, zero, one, two, few, many, other: rest } as PluralPart;
+  return [{ kind, key, zero, one, two, few, many, other: rest }, key];
 };
 
 /**
@@ -194,6 +207,7 @@ export type TextPart = {
  */
 export type PluralPart = {
   kind: 'plural';
+  // No need to get the key type since it should always be a number.
   key: string;
   zero?: string;
   one?: string;
