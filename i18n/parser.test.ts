@@ -159,6 +159,7 @@ describe('parseText()', () => {
   });
 
   it('should parse plural singular-only', () => {
+    /* spell-checker: disable */
     const parsedText = parseText('{count:number} weitere{{s|}} Mitglied{{er}}');
     assertEquals(parsedText, [
       {
@@ -188,6 +189,7 @@ describe('parseText()', () => {
         other: 'er',
       },
     ]);
+    /* spell-checker: enable */
   });
 
   it('should parse plural zero-one-other', () => {
