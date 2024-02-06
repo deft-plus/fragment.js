@@ -7,29 +7,79 @@
  */
 
 import { assertEquals, describe, it } from '@app_deps_testing.ts';
-import { i18n } from './mod.ts';
+import { i18n, type I18nResource } from './mod.ts';
 
-const locale = 'en-US';
-
-const translations = {
-  'Hi {name:string}!': 'Hi {name:string}!',
-  'Today is {value:string|upper}': 'Today is {value:string|upper}',
-  'I own {amount:number} car{{amount:s}}': 'I own {amount:number} car{{amount:s}}',
-};
+const resources: I18nResource[] = [
+  {
+    locale: 'en',
+    translations: {
+      hello: 'Hi {name:string}!',
+      today: 'Today is {value:string|upper}',
+      cars: 'I own {amount:number} car{{amount:s}}',
+    },
+  },
+  {
+    locale: 'en-US',
+    translations: {
+      hello: 'Hi {name:string}!',
+      today: 'Today is {value:string|upper}',
+      cars: 'I own {amount:number} car{{amount:s}}',
+    },
+  },
+  {
+    locale: 'es',
+    translations: {
+      hello: '¡Hola {name:string}!',
+      today: 'Hoy es {value:string|upper}',
+      cars: 'Tengo {amount:number} auto{{amount:s}}',
+    },
+  },
+  {
+    locale: 'es-ES',
+    translations: {
+      hello: '¡Hola {name:string}!',
+      cars: 'Tengo {amount:number} coche{{amount:s}}',
+    },
+  },
+  {
+    locale: 'es-CO',
+    translations: {
+      today: 'Hoy es {value:string|upper}',
+      cars: 'Tengo {amount:number} carro{{amount:s}}',
+    },
+  },
+];
 
 const formatters = {
-  upper: (value: string) => value.toUpperCase(),
+  upper: (value: unknown) => {
+    if (typeof value !== 'string') {
+      throw new Error('upper formatter only accepts strings');
+    }
+    return value.toUpperCase();
+  },
 };
 
 describe('i18n()', () => {
   it('should instantiate the i18n correctly', () => {
     const i18nFactory = i18n({ formatters });
 
-    i18nFactory.load({ locale, translations });
+    resources.forEach((resource) => {
+      i18nFactory.load({ locale: resource.locale, translations: resource.translations });
+    });
 
-    const t = i18nFactory(locale);
+    const t1 = i18nFactory('en-US');
 
-    assertEquals(t['Hi {name:string}!']({ name: 'John' }), 'Hi John!');
-    assertEquals(t['Today is {value:string|upper}']({ value: 'Friday' }), 'Today is FRIDAY');
+    assertEquals(t1.hello({ name: 'John' }), 'Hi John!');
+    assertEquals(t1.today({ value: 'Friday' }), 'Today is FRIDAY');
+
+    const t2 = i18nFactory('es-CO');
+
+    assertEquals(t2.hello({ name: 'John' }), '¡Hola John!');
+    assertEquals(t2.today({ value: 'Viernes' }), 'Hoy es VIERNES');
+    assertEquals(t2.cars({ amount: 2 }), 'Tengo 2 carros');
+
+    const t3 = i18nFactory('fr');
+
+    assertEquals(t3.hello({ name: 'John' }), 'Hi John!');
   });
 });
