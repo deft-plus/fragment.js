@@ -24,7 +24,7 @@ import {
  * };
  * ```
  */
-const cache: Record<string, Record<string, ParsedMessage>> = {};
+let cache: Record<string, Record<string, ParsedMessage>> = {};
 
 /**
  * Cache of translations. Stores the data in the following format:
@@ -35,13 +35,23 @@ const cache: Record<string, Record<string, ParsedMessage>> = {};
  * };
  * ```
  */
-const translations: Record<string, (args: Record<string, unknown>) => string> = {};
+let translations: Record<string, (args?: Record<string, unknown>) => string> = {};
 
 /**
- * The `i18n` function is the main function of the library. It returns a factory function that can
- * be used to create translations for the given locale.
+ * The `i18n` function is the main function of the library. It returns a factory function that
+ * can be used to create translations for the given locale.
+ *
+ * It also has a `clear` function that clears the cache and translations objects.
  */
-export function i18n(options: I18nOptions) {
+export const i18n = Object.assign(i18nImpl, {
+  clear: clearTranslation,
+});
+
+/**
+ * The `i18nImpl` function is the main function of the library. It returns a factory function that
+ * can be used to create translations for the given locale.
+ */
+function i18nImpl(options: I18nOptions) {
   /**
    * The `createTranslations` function creates a cached translations object for the given locale and
    * each key is a function that returns the translated message with the given arguments.
@@ -63,14 +73,14 @@ export function i18n(options: I18nOptions) {
     resourceKeys.forEach((key) => {
       const message = getMessage(locale, key, cache);
 
-      translations[key] = (args: Record<string, unknown>) =>
+      translations[key] = (args?: Record<string, unknown>) =>
         message
           .map((part) => {
             if (part.kind === 'text') {
               return part.content;
             }
 
-            const value = args[part.key];
+            const value = args?.[part.key];
 
             if (part.kind === 'plural') {
               const plural = getPlural(pluralRules, part, value);
@@ -111,8 +121,20 @@ export function i18n(options: I18nOptions) {
     });
   };
 
-  const i18nFactory = Object.assign(createTranslations, { load: loadTranslation });
+  const i18nFactory = Object.assign(createTranslations, {
+    load: loadTranslation,
+  });
   return i18nFactory;
+}
+
+/**
+ * The `clearTranslation` function clears the cache and translations objects.
+ *
+ * This is useful for testing purposes.
+ */
+function clearTranslation() {
+  cache = {};
+  translations = {};
 }
 
 /**
@@ -183,25 +205,25 @@ const getMessage = (
 ): ParsedMessage => {
   const targetLocale = new Intl.Locale(locale);
 
-  // Attempt to find the key in the specified locale
+  // Attempt to find the key in the specified locale.
   if (translations[targetLocale.baseName] && translations[targetLocale.baseName][key]) {
     return translations[targetLocale.baseName][key];
   }
 
   const translationsKeys = Object.keys(translations);
 
-  // Find the closest match by language tag
+  // Find the closest match by language tag.
   const closestMatch = translationsKeys.find((availableLocale) => {
     const available = new Intl.Locale(availableLocale);
     return targetLocale.language === available.language;
   });
 
-  // If a closest match is found, attempt to get the key from there
+  // If a closest match is found, attempt to get the key from there.
   if (closestMatch && translations[closestMatch][key]) {
     return translations[closestMatch][key];
   }
 
-  // Default to the first locale in the translations object
+  // Default to the first locale in the translations object.
   const defaultLocale = translationsKeys[0];
   return translations[defaultLocale][key] ?? '';
 };
