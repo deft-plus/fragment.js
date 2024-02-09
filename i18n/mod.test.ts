@@ -9,6 +9,14 @@
 import { assertEquals, assertThrows, beforeEach, describe, it } from '@app_deps_testing.ts';
 import { i18n, type I18nResource } from './mod.ts';
 
+type I18nTranslations = {
+  basic: 'Hello World!';
+  withParameter: 'Hi {name:string}!';
+  withFormatter: 'Today is {value:string|upper}';
+  withPlural: 'I own {amount:number} car{{amount:s}}';
+  withSwitch: 'This is {gender|{ male: his, female: her, *: their }} car';
+};
+
 const resources: I18nResource[] = [
   {
     locale: 'en',
@@ -88,7 +96,7 @@ describe('i18n()', () => {
   });
 
   it('should grab the correct locale', () => {
-    const i18nFactory = i18n({ formatters });
+    const i18nFactory = i18n<I18nTranslations>({ formatters });
 
     resources.forEach((resource) => {
       i18nFactory.load({ locale: resource.locale, translations: resource.translations });
@@ -104,7 +112,7 @@ describe('i18n()', () => {
   });
 
   it('should get the default locale (The first one) if it is not found', () => {
-    const i18nFactory = i18n({ formatters });
+    const i18nFactory = i18n<I18nTranslations>({ formatters });
 
     resources.forEach((resource) => {
       i18nFactory.load({ locale: resource.locale, translations: resource.translations });
@@ -116,13 +124,13 @@ describe('i18n()', () => {
   });
 
   it('should throw an error if the locale is not found and there is no default locale', () => {
-    const i18nFactory = i18n({ formatters });
+    const i18nFactory = i18n<I18nTranslations>({ formatters });
 
     assertThrows(() => i18nFactory('fr'));
   });
 
   it('should get the closest locale if it is not found', () => {
-    const i18nFactory = i18n({ formatters });
+    const i18nFactory = i18n<I18nTranslations>({ formatters });
 
     resources.forEach((resource) => {
       i18nFactory.load({ locale: resource.locale, translations: resource.translations });

@@ -43,9 +43,9 @@ let translations: Record<string, (args?: Record<string, unknown>) => string> = {
  *
  * It also has a `clear` function that clears the cache and translations objects.
  */
-export const i18n = Object.assign(i18nImpl, {
+export const i18n: I18n = Object.assign(i18nImpl, {
   clear: clearTranslation,
-});
+}) as I18n;
 
 /**
  * The `i18nImpl` function is the main function of the library. It returns a factory function that
@@ -250,3 +250,11 @@ export type I18nOptions = {
    */
   formatters: Record<string, I18nFormatter>;
 };
+
+type I18n =
+  & { clear: () => void }
+  & (<T extends Record<string, string>>(options: I18nOptions) =>
+    & { load: (resource: I18nResource) => void }
+    & ((locale: string) => {
+      [K in keyof T]: (args?: Record<string, unknown>) => T[K];
+    }));
