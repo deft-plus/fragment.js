@@ -14,6 +14,7 @@ type I18nTranslations = {
   withParameter: 'Hi {name:string}!';
   withFormatter: 'Today is {value:string|upper}';
   withPlural: 'I own {amount:number} car{{amount:s}}';
+  withPlural2: 'I own car{{amount:s}}';
   withSwitch: 'This is {gender|{ male: his, female: her, *: their }} car';
 };
 
@@ -84,7 +85,7 @@ describe('i18n()', () => {
   });
 
   it('should instantiate the i18n correctly', () => {
-    const i18nFactory = i18n({ formatters });
+    const i18nFactory = i18n<I18nTranslations>({ formatters });
 
     resources.forEach((resource) => {
       i18nFactory.load({ locale: resource.locale, translations: resource.translations });
@@ -108,6 +109,7 @@ describe('i18n()', () => {
     assertEquals(t1.withParameter({ name: 'John' }), 'Hi John!');
     assertEquals(t1.withFormatter({ value: 'Friday' }), 'Today is FRIDAY');
     assertEquals(t1.withPlural({ amount: 1 }), 'I own 1 car');
+    assertEquals(t1.withPlural2({ amount: 1 }), 'I own 1 car');
     assertEquals(t1.withSwitch({ gender: 'male' }), 'This is his car');
   });
 
@@ -120,7 +122,7 @@ describe('i18n()', () => {
 
     const t = i18nFactory('fr');
 
-    assertEquals(t.basic({ name: 'John' }), 'Hello World!');
+    assertEquals(t.basic(), 'Hello World!');
   });
 
   it('should throw an error if the locale is not found and there is no default locale', () => {

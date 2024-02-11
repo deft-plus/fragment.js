@@ -251,10 +251,74 @@ export type I18nOptions = {
   formatters: Record<string, I18nFormatter>;
 };
 
+/**
+ * The `I18n` type is the type of the `i18n` function.
+ */
 type I18n =
   & { clear: () => void }
   & (<T extends Record<string, string>>(options: I18nOptions) =>
     & { load: (resource: I18nResource) => void }
     & ((locale: string) => {
-      [K in keyof T]: (args?: Record<string, unknown>) => T[K];
+      [K in keyof T]: keyof Prettify<GetParams<T[K]>> extends never
+        // No params
+        ? () => string
+        // Params
+        : (args: Prettify<GetParams<T[K]>>) => string;
     }));
+
+/**
+ * The `GetParams` type maps the params from the path to the type.
+ */
+type GetParams<T extends string> = Trim<T> extends `{${infer Param}:${infer Type}}${infer Rest}`
+  // Plural
+  ? Param extends `{${infer Plural}` ? { [K in Plural]: number } & GetParams<Rest>
+    // Switch case
+  : Param extends `${infer SwitchParam}|{${infer _SwitchCases}`
+    ? { [K in SwitchParam]: string } & GetParams<Rest>
+    // Param
+  : Type extends `${infer TypeWithF}|${infer _Formatters}`
+    // Param with formatter
+    ? Param extends `${infer ParamOp}?`
+      // Param with formatter and optional
+      ? { [K in ParamOp]?: StringToType<TypeWithF> } & GetParams<Rest>
+      // Param with formatter and required
+    : { [K in Param]: StringToType<TypeWithF> } & GetParams<Rest>
+    // Param without formatter
+  : Param extends `${infer ParamOp}?`
+    // Param without formatter and optional
+    ? { [K in ParamOp]?: StringToType<Type> } & GetParams<Rest>
+    // Param without formatter and required
+  : { [K in Param]: StringToType<Type> } & GetParams<Rest>
+  // Check for more params
+  : Trim<T> extends `${infer _Start}${infer Rest}` ? GetParams<Rest>
+  // deno-lint-ignore ban-types
+  : {};
+
+/**
+ * The `StringToType` type maps a string to a type.
+ */
+type StringToType<T extends string> = T extends keyof TypeMapping ? TypeMapping[T] : never;
+
+/**
+ * Interface with the mapping of string to type.
+ */
+type TypeMapping = {
+  string: string;
+  number: number;
+  boolean: boolean;
+};
+
+/**
+ * The `Trim` type trims the spaces from the given string.
+ */
+type Trim<T extends string, Acc extends string = ''> = T extends `${infer Char}${infer Rest}`
+  // Remove spaces
+  ? (Char extends ' ' ? Trim<Rest, Acc> : Trim<Rest, `${Acc}${Char}`>)
+  // Return the accumulated string
+  : (T extends '' ? Acc : never);
+
+/**
+ * The `Prettify` type prettifies the given object.
+ */
+// deno-lint-ignore ban-types
+type Prettify<T> = { [K in keyof T]: T[K] } & {};
