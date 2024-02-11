@@ -26,6 +26,7 @@ const resources: I18nResource[] = [
       withParameter: 'Hi {name:string}!',
       withFormatter: 'Today is {value:string|upper}',
       withPlural: 'I own {amount:number} car{{amount:s}}',
+      withPlural2: 'I own car{{amount:s}}',
       withSwitch: 'This is {gender|{ male: his, female: her, *: their }} car',
     },
   },
@@ -109,7 +110,7 @@ describe('i18n()', () => {
     assertEquals(t1.withParameter({ name: 'John' }), 'Hi John!');
     assertEquals(t1.withFormatter({ value: 'Friday' }), 'Today is FRIDAY');
     assertEquals(t1.withPlural({ amount: 1 }), 'I own 1 car');
-    assertEquals(t1.withPlural2({ amount: 1 }), 'I own 1 car');
+    assertEquals(t1.withPlural2({ amount: 2 }), 'I own cars');
     assertEquals(t1.withSwitch({ gender: 'male' }), 'This is his car');
   });
 
