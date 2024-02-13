@@ -14,26 +14,14 @@ import {
 } from './parser.ts';
 
 /**
- * Cache of resolved messages. Stores the data in the following format:
- *
- * ```ts
- * type Cache = {
- *   'en-US': {
- *     'Hello World Key': ParsedMessagePart,
- *   };
- * };
- * ```
+ * Object with all the parsed translations cached by locale, namespace and key to avoid parsing
+ * the same translation multiple times.
  */
 let cache: Record<string, Record<string, Record<string, ParsedMessage>>> = {};
 
 /**
- * Cache of translations. Stores the data in the following format:
- *
- * ```ts
- * type Translations = {
- *   'Hello World Key': (args: Record<string, unknown>) => string,
- * };
- * ```
+ * Object with the cached runtime translations by namespace and key. This helps to avoid
+ * creating the same object multiple times while using the same translation.
  */
 let translations: Record<string, Record<string, (args?: Record<string, unknown>) => string>> = {};
 
@@ -48,15 +36,16 @@ export const i18n: I18n = Object.assign(i18nImpl, {
 }) as I18n;
 
 /**
- * The `i18nImpl` function is the main function of the library. It returns a factory function that
- * can be used to create translations for the given locale.
+ * The `i18nImpl` function is the main function of the library. The function implements the logic
+ * to create translations for the given locale and namespace.
  */
 function i18nImpl(options: I18nOptions) {
   const { formatters } = options;
 
   /**
-   * The `createTranslations` function creates a cached translations object for the given locale and
-   * each key is a function that returns the translated message with the given arguments.
+   * The `createTranslations` function creates a cached translations object for the given locale,
+   * namespace and each key is a function that returns the translated message with the given
+   * arguments.
    */
   const createTranslations = (createTranslationOptions: { locale: string; namespace: string }) => {
     const { locale, namespace } = createTranslationOptions;
@@ -110,15 +99,12 @@ function i18nImpl(options: I18nOptions) {
   };
 
   /**
-   * The `loadTranslation` function loads a translation resource into the cache object. Then with
-   * the `createTranslations` function we can create a cached translations object for the given
-   * locale. without having to load the translation resource again.
+   * The `loadTranslation` function loads a translation resource into the cached object.
    */
   const loadTranslation = (resource: I18nResource) => {
     const { locale, translations, namespace } = resource;
 
     Object.entries(translations).forEach(([key, value]) => {
-      // Store in cache if not already stored.
       if (!cache[locale]) {
         cache[locale] = {};
       }
@@ -133,9 +119,13 @@ function i18nImpl(options: I18nOptions) {
     });
   };
 
+  /**
+   * Factory function to allow the user create the translations for the given locale and load them.
+   */
   const i18nFactory = Object.assign(createTranslations, {
     load: loadTranslation,
   });
+
   return i18nFactory;
 }
 
@@ -208,7 +198,7 @@ const getPlural = (pluralRules: Intl.PluralRules, part: PluralPart, value: unkno
 };
 
 /**
- * The `getMessage` function returns the message to parse for the given locale and key.
+ * The `getMessage` function returns the message to parse for the given locale, namespace and key.
  */
 const getMessage = (
   locale: string,
@@ -242,7 +232,8 @@ const getMessage = (
 };
 
 /**
- * The `I18nResource` type is the resource that can be loaded into the `i18n` function.
+ * A resource is a object with the locale, namespace and translations. This is the object that is
+ * passed to the `loadTranslation` function to allow to use the translations.
  */
 export type I18nResource = {
   namespace: string;
@@ -251,12 +242,13 @@ export type I18nResource = {
 };
 
 /**
- * The `I18nFormatter` type is a function that receives a value and returns a string.
+ * A formatter is a function that receives a value and returns a string to be used in the
+ * translation.
  */
 export type I18nFormatter = (value: unknown) => string;
 
 /**
- * The `I18nOptions` type is the options that can be passed to the `i18n` function.
+ * Options to pass to the `i18n` function.
  */
 export type I18nOptions = {
   /**
@@ -266,10 +258,10 @@ export type I18nOptions = {
 };
 
 /**
- * The `I18n` type is the type of the `i18n` function.
+ * Main function to create the i18n object.
  */
-type I18n =
-  & (<T extends Record<string, string>>(options: I18nOptions) => I18nFactory<T>)
+export type I18n =
+  & ((options: I18nOptions) => I18nFactory)
   & {
     /**
      * The `clear` function clears the cache and translations objects.
@@ -277,8 +269,8 @@ type I18n =
     clear: () => void;
   };
 
-type I18nFactory<T extends Record<string, string>> =
-  & CreateTranlationsFn<T>
+type I18nFactory =
+  & CreateTranlationsFn
   & {
     /**
      * The `load` function loads a translation resource into the cache object. Then with
@@ -291,15 +283,16 @@ type I18nFactory<T extends Record<string, string>> =
 /**
  * The `createTranslations` function creates a translations object for the given locale.
  */
-type CreateTranlationsFn<T extends Record<string, string>> = (createTranslationOptions: {
+type CreateTranlationsFn = <T extends Record<string, string>>(createTranslationOptions: {
   locale: string;
   namespace: string;
 }) => Translations<T>;
 
 /**
- * The `Translations` type is the type of the translations object.
+ * The translations object is an object where the keys are functions that return each translation.
+ * This type maps the keys of the given object to functions that return the translation.
  */
-type Translations<T extends Record<string, string>> = {
+export type Translations<T extends Record<string, string>> = {
   [K in keyof T]: keyof GetParams<T[K]> extends never
     // No params
     ? () => string
@@ -308,7 +301,7 @@ type Translations<T extends Record<string, string>> = {
 };
 
 /**
- * The `GetParams` type maps the params from the path to the type.
+ * This type is used to get the params of the string literal type.
  */
 type GetParams<T extends string> = Trim<T> extends `{${infer Param}:${infer Type}}${infer Rest}`
   // Plural
@@ -336,7 +329,7 @@ type GetParams<T extends string> = Trim<T> extends `{${infer Param}:${infer Type
   : {};
 
 /**
- * The `StringToType` type maps a string to a type.
+ * This type maps the string type to the actual type.
  */
 type StringToType<T extends string> = T extends keyof TypeMapping ? TypeMapping[T] : never;
 

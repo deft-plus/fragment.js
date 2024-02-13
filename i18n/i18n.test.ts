@@ -91,25 +91,25 @@ describe('i18n()', () => {
   });
 
   it('should instantiate the i18n correctly', () => {
-    const i18nFactory = i18n<I18nTranslations>({ formatters });
+    const i18nFactory = i18n({ formatters });
 
     resources.forEach((resource) => {
       i18nFactory.load(resource);
     });
 
-    const t = i18nFactory({ locale: 'en-US', namespace: 'default' });
+    const t = i18nFactory<I18nTranslations>({ locale: 'en-US', namespace: 'default' });
 
     assertEquals(t.basic(), 'Hello World!');
   });
 
   it('should grab the correct locale', () => {
-    const i18nFactory = i18n<I18nTranslations>({ formatters });
+    const i18nFactory = i18n({ formatters });
 
     resources.forEach((resource) => {
       i18nFactory.load(resource);
     });
 
-    const t1 = i18nFactory({ locale: 'en-US', namespace: 'default' });
+    const t1 = i18nFactory<I18nTranslations>({ locale: 'en-US', namespace: 'default' });
 
     assertEquals(t1.basic(), 'Hello World!');
     assertEquals(t1.withParameter({ name: 'John' }), 'Hi John!');
@@ -120,32 +120,54 @@ describe('i18n()', () => {
   });
 
   it('should get the default locale (The first one) if it is not found', () => {
-    const i18nFactory = i18n<I18nTranslations>({ formatters });
+    const i18nFactory = i18n({ formatters });
 
     resources.forEach((resource) => {
       i18nFactory.load(resource);
     });
 
-    const t = i18nFactory({ locale: 'fr', namespace: 'default' });
+    const t = i18nFactory<I18nTranslations>({ locale: 'fr', namespace: 'default' });
 
     assertEquals(t.basic(), 'Hello World!');
   });
 
   it('should throw an error if the locale is not found and there is no default locale', () => {
-    const i18nFactory = i18n<I18nTranslations>({ formatters });
+    const i18nFactory = i18n({ formatters });
 
-    assertThrows(() => i18nFactory({ locale: 'fr', namespace: 'default' }));
+    assertThrows(() => i18nFactory<I18nTranslations>({ locale: 'fr', namespace: 'default' }));
   });
 
   it('should get the closest locale if it is not found', () => {
-    const i18nFactory = i18n<I18nTranslations>({ formatters });
+    const i18nFactory = i18n({ formatters });
 
     resources.forEach((resource) => {
       i18nFactory.load(resource);
     });
 
-    const t = i18nFactory({ locale: 'es-CO', namespace: 'default' });
+    const t = i18nFactory<I18nTranslations>({ locale: 'es-CO', namespace: 'default' });
 
     assertEquals(t.withParameter({ name: 'John' }), '¡Hola John!');
+  });
+
+  it('should allow to load different namespaces', () => {
+    const i18nFactory = i18n({ formatters });
+
+    resources.forEach((resource) => {
+      i18nFactory.load(resource);
+    });
+
+    i18nFactory.load({
+      namespace: 'login',
+      locale: 'en',
+      translations: {
+        basic: 'Hello World!',
+      },
+    });
+
+    const tLogin = i18nFactory<{ basic: 'Hello World!' }>({ locale: 'en', namespace: 'login' });
+    const tDefault = i18nFactory<I18nTranslations>({ locale: 'en', namespace: 'default' });
+
+    assertEquals(tLogin.basic(), 'Hello World!');
+    assertEquals(tDefault.basic(), 'Hello World!');
   });
 });
