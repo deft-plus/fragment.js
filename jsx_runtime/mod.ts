@@ -1,46 +1,59 @@
+/**
+ * @license
+ * Copyright Deft+ All Rights Reserved.
+ *
+ * Use of this source code is governed by an Apache-2.0 license that can be
+ * found in the LICENSE file at https://github.com/deft-plus/fragment.js/blob/latest/LICENCE
+ */
+
 import './types.d.ts';
 import { isFragment } from '../fragment/api.ts';
-import { raw } from './html_utils.ts';
-import { html } from './html_utils.ts';
 
-function jsx(
-  element: string | ((...args: any) => any),
-  props: Record<PropertyKey, unknown> | null,
+/**
+ * The `jsx` function is used to create the nodes that will be rendered by the `render` function.
+ */
+export function jsx(
+  element: unknown,
+  props?: Record<PropertyKey, unknown> | null,
   key?: string | number | null,
 ) {
   if (typeof element === 'function' && !isFragment(element)) {
     throw new Error(`Element "${element.name}" is not a fragment!`);
-    // console.error(`Element "${element.name}" is not a fragment!`);
   }
 
   const funElement = typeof element === 'function' && element(props);
   const { children, ...otherProps } = props ?? {};
-
-  console.log(funElement.children);
 
   const res = funElement
     ? {
       name: funElement.name,
       element: funElement.wrapper ?? funElement.element,
       props: otherProps,
-      children: funElement.children,
       key,
+      children: funElement.children,
     }
     : {
       name: element,
       element,
       props: otherProps,
-      children,
       key,
+      children,
     };
 
   return res;
 }
 
-const jsxTemplate = html;
+/**
+ * The `jsxs` function is used to create the nodes that will be rendered by the `render` function.
+ */
+export const jsxs = jsx;
 
-const jsxAttr = (name: string, value: string) => raw(name + '="' + html`${value}` + '"');
+/**
+ * The `jsxDEV` function is used to create the nodes that will be rendered by the `render` function.
+ */
+export const jsxDEV = jsx;
 
-const jsxEscape = (unsafe: string) => unsafe;
-
-export { jsx, jsx as jsxs, jsxAttr, jsxEscape, jsxTemplate };
+/**
+ * The `Fragment` will be used to group multiple nodes together.
+ */
+export const Fragment = (props: Record<PropertyKey, unknown>) => props.children;

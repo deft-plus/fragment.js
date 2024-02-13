@@ -13,7 +13,7 @@ import { ReactiveNode } from './graph.ts';
  *
  * This can be used to auto-unwrap signals in various cases, or to auto-wrap non-signal values.
  */
-const SIGNAL = Symbol('SIGNAL');
+const SIGNAL = Symbol('__internal_signal_meta__');
 
 /** Internal type to add the `signal` symbol to the given `T` type. */
 type WithSignal<T> = T & { [SIGNAL]: unknown };

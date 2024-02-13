@@ -1,15 +1,26 @@
+/**
+ * @license
+ * Copyright Deft+ All Rights Reserved.
+ *
+ * Use of this source code is governed by an Apache-2.0 license that can be
+ * found in the LICENSE file at https://github.com/deft-plus/fragment.js/blob/latest/LICENCE
+ */
+
 // deno-lint-ignore-file no-empty-interface ban-types no-explicit-any
+
 import { FRAGMENT } from '../fragment/api.ts';
 
 type DOMElement = Element;
 
 declare global {
+  export const __DEV__: boolean;
+
   export namespace JSX {
     type Frag = {
       element: string;
       name: string;
       props: Record<PropertyKey, unknown>;
-      children: unknown;
+      children: unknown[];
       key: unknown;
       [FRAGMENT]?: unknown;
     };
@@ -720,7 +731,7 @@ declare global {
         | 'treeitem';
     }
 
-    // TODO: Should we allow this?
+    // TODO(@miguelbogota): Should we allow this?
     // type ClassKeys = `class:${string}`;
     // type CSSKeys = Exclude<keyof csstype.PropertiesHyphen, `-${string}`>;
 
@@ -2236,7 +2247,8 @@ declare global {
     }
 
     // This is used by the compiler to get the prop types of each of the html tags available.
-    interface IntrinsicElements
-      extends HTMLElementTags, HTMLElementDeprecatedTags, SVGElementTags {}
+    interface IntrinsicElements extends HTMLElementTags, HTMLElementDeprecatedTags, SVGElementTags {
+      // Empty...
+    }
   }
 }

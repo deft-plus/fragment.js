@@ -28,7 +28,7 @@
     "noUnusedParameters": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "jsx": "precompile",
+    "jsx": "react-jsx", // TODO(@miguelbogota): change to "precompile" when implementation is ready.
     "jsxImportSource": "jsx_runtime",
     "types": ["./types/mod.ts"]
   },
