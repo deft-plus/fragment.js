@@ -6,58 +6,60 @@
  * found in the LICENSE file at https://github.com/deft-plus/fragment.js/blob/latest/LICENCE
  */
 
-// deno-lint-ignore-file no-empty-interface ban-types no-explicit-any
+// deno-lint-ignore-file no-empty-interface no-explicit-any
 
 import { FRAGMENT } from '../fragment/api.ts';
 
-type DOMElement = Element;
-
 declare global {
-  export const __DEV__: boolean;
+  /** Environment of the current run execution. */
+  export const env: {
+    /** Current environment is development (Running locally). */
+    isDevelopment: boolean;
+    /** Current environment is production (Running in a server the built version). */
+    isProduction: boolean;
+    /** Current environment is testing (Running tests). */
+    isTesting: boolean;
+  };
 
   export namespace JSX {
-    type Frag = {
-      element: string;
+    /** Fragment element type. */
+    type FragmentElement = {
+      /** Fragment name (Helpfull for debugging). */
       name: string;
+      /** Element to be rendered (Usually the name of the fragment). */
+      element: string;
+      /** Props to be passed to the element. */
       props: Record<PropertyKey, unknown>;
+      /** Children to be passed to the element. */
       children: unknown[];
-      key: unknown;
-      [FRAGMENT]?: unknown;
+      /** Key to identify the object as a fragment. */
+      [FRAGMENT]?: boolean;
     };
 
     type Element =
-      | Frag
+      | FragmentElement
       | Node
-      | ArrayElement
-      | (string & {})
+      | Array<Element>
+      | string
       | number
       | boolean
       | null
       | undefined;
-    interface ArrayElement extends Array<Element> {}
+
     interface ElementAttributesProperty {
       // Empty, libs can define requirements downstream
     }
+
     // This is used by the compiler to infer the key to get the children type from.
     interface ElementChildrenAttribute {
       children: PropertyKey;
     }
+
     interface EventHandler<T, E extends Event> {
-      (
-        e: E & {
-          currentTarget: T;
-          target: DOMElement;
-        },
-      ): void;
+      (e: E & { currentTarget: T; target: Element }): void;
     }
     interface BoundEventHandler<T, E extends Event> {
-      0: (
-        data: any,
-        e: E & {
-          currentTarget: T;
-          target: DOMElement;
-        },
-      ) => void;
+      0: (data: any, e: E & { currentTarget: T; target: Element }) => void;
       1: any;
     }
     type EventHandlerUnion<T, E extends Event> = EventHandler<T, E> | BoundEventHandler<T, E>;
@@ -67,7 +69,7 @@ declare global {
         e: E & {
           currentTarget: T;
           target: T extends HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement ? T
-            : DOMElement;
+            : Element;
         },
       ): void;
     }
@@ -77,7 +79,7 @@ declare global {
         e: E & {
           currentTarget: T;
           target: T extends HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement ? T
-            : DOMElement;
+            : Element;
         },
       ) => void;
       1: any;
@@ -91,7 +93,7 @@ declare global {
         e: E & {
           currentTarget: T;
           target: T extends HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement ? T
-            : DOMElement;
+            : Element;
         },
       ): void;
     }
@@ -101,7 +103,7 @@ declare global {
         e: E & {
           currentTarget: T;
           target: T extends HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement ? T
-            : DOMElement;
+            : Element;
         },
       ) => void;
       1: any;
@@ -115,7 +117,7 @@ declare global {
         e: E & {
           currentTarget: T;
           target: T extends HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement ? T
-            : DOMElement;
+            : Element;
         },
       ): void;
     }
@@ -125,7 +127,7 @@ declare global {
         e: E & {
           currentTarget: T;
           target: T extends HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement ? T
-            : DOMElement;
+            : Element;
         },
       ) => void;
       1: any;
@@ -153,7 +155,7 @@ declare global {
     type Accessor<T> = () => T;
     interface Directives {}
     interface DirectiveFunctions {
-      [x: string]: (el: DOMElement, accessor: Accessor<any>) => void;
+      [x: string]: (el: Element, accessor: Accessor<any>) => void;
     }
     interface ExplicitProperties {}
     interface ExplicitAttributes {}
@@ -400,11 +402,6 @@ declare global {
       onvolumechange?: EventHandlerUnion<T, Event>;
       onwaiting?: EventHandlerUnion<T, Event>;
       onwheel?: EventHandlerUnion<T, WheelEvent>;
-    }
-
-    interface CSSProperties {
-      // Override
-      [key: `-${string}`]: string | number | undefined;
     }
 
     type HTMLAutocapitalize = 'off' | 'none' | 'on' | 'sentences' | 'words' | 'characters';
@@ -731,14 +728,6 @@ declare global {
         | 'treeitem';
     }
 
-    // TODO(@miguelbogota): Should we allow this?
-    // type ClassKeys = `class:${string}`;
-    // type CSSKeys = Exclude<keyof csstype.PropertiesHyphen, `-${string}`>;
-
-    // type CSSAttributes = {
-    //   [key in CSSKeys as `style:${key}`]: csstype.PropertiesHyphen[key];
-    // };
-
     interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
       // [key: ClassKeys]: boolean;
       accessKey?: string;
@@ -752,7 +741,7 @@ declare global {
       inert?: boolean;
       lang?: string;
       spellcheck?: boolean;
-      style?: CSSProperties | string;
+      style?: string;
       tabindex?: number | string;
       title?: string;
       translate?: 'yes' | 'no';
@@ -1251,7 +1240,7 @@ declare global {
     }
     interface StylableSVGAttributes {
       class?: string | undefined;
-      style?: CSSProperties | string;
+      style?: string;
     }
     interface TransformableSVGAttributes {
       transform?: string;

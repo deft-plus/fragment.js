@@ -156,6 +156,14 @@ class WritableSignalImpl<T> extends ReactiveNode {
 
   signal(): T {
     this.producerAccessed();
+
+    // TODO(@miguelbogota): Mark the value as a signal value so that it can't be identified as a signal value.
+    // const markedValued = Object.assign(this.value as object, {
+    //   isSignalValue: true,
+    // }) as T;
+
+    // return markedValued;
+
     return this.value;
   }
 }

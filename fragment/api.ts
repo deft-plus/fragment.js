@@ -6,11 +6,14 @@
  * found in the LICENSE file at https://github.com/deft-plus/fragment.js/blob/latest/LICENCE
  */
 
+/**
+ * Symbol used to tell `Fragment`s apart from other functions.
+ */
 export const FRAGMENT = Symbol('__internal_fragment_meta__');
 
 /** Checks if the given `value` function is a fragment. */
 export function isFragment(value: unknown): value is JSX.Element {
-  return (value as JSX.Frag)[FRAGMENT] !== undefined;
+  return !!(value as JSX.FragmentElement)[FRAGMENT];
 }
 
 /** Marks the given `value` as a fragment. */
