@@ -11,20 +11,19 @@ import { ReadonlySignal, signal, WritableSignal } from '../signal/mod.ts';
 
 type Primitive = string | number | boolean | null | undefined;
 type Computed<T> = () => T;
+type Server<T> = () => Promise<T>;
 
-type ValidAttributes = Record<string, Primitive | Computed<unknown>>;
+type ValidAttributes = Record<string, Primitive | Computed<unknown> | Server<unknown>>;
 
 type InferAttributes<T extends ValidAttributes> =
   & {
     // Only primitive properties must be optional
-    [K in keyof T as T[K] extends Primitive ? K : never]?: T[K] extends Primitive
-      // Primitive value
-      ? T[K]
-      : never;
+    [K in keyof T as T[K] extends Primitive ? K : never]?: T[K];
   }
   & {
     // Computed properties must be required or as the given type.
-    [K in keyof T as T[K] extends Primitive ? never : K]: T[K] extends Primitive ? never
+    [K in keyof T as T[K] extends Primitive ? never : K]: T[K] extends Server<infer S>
+      ? (attrs: InferAttributesWithSignals<Omit<T, K>>) => Promise<S>
       : T[K] extends Computed<infer R>
       // Computed value
         ? R extends void ? never
@@ -40,7 +39,7 @@ type InferAttributesWithSignals<T extends ValidAttributes, Write = false> =
       : ReadonlySignal<T[K]>
       : T[K] extends () => infer R
       // Computed value
-        ? ReadonlySignal<R>
+        ? ReadonlySignal<Awaited<R>>
       : never;
   }
   & {
@@ -48,7 +47,7 @@ type InferAttributesWithSignals<T extends ValidAttributes, Write = false> =
     _ref: any;
   };
 
-type RemoveComputed<T extends ValidAttributes> = {
+type RemoveComputedAndServer<T extends ValidAttributes> = {
   [K in keyof T as T[K] extends () => unknown ? never : K]: T[K];
 };
 
@@ -66,7 +65,7 @@ export type FragmentOptions<T extends ValidAttributes> = {
 };
 
 export function fragment<const T extends ValidAttributes>(options: FragmentOptions<T>) {
-  const contentProps = (passedProps: RemoveComputed<T>) => {
+  const contentProps = (passedProps: RemoveComputedAndServer<T>) => {
     const props = {
       ...options.attributes,
       ...passedProps,
@@ -81,11 +80,19 @@ export function fragment<const T extends ValidAttributes>(options: FragmentOptio
     const computedProps = Object.entries(props)
       .filter(([, value]) => typeof value === 'function')
       .map(([key, value]) => {
-        const computed = () =>
-          (value as (props: unknown) => unknown)({
+        const computed = () => {
+          const result = (value as (props: unknown) => unknown)({
             ...primitiveProps,
             ...computedAcc,
           });
+
+          // Check if is not a server value
+          if (!(result instanceof Promise)) {
+            return result;
+          }
+
+          throw new Error('Server values are not supported just yet');
+        };
 
         const fn = signal.memo(computed);
         Object.assign(computedAcc, { [key]: fn });
@@ -99,7 +106,7 @@ export function fragment<const T extends ValidAttributes>(options: FragmentOptio
     >;
   };
 
-  const frag = (props: RemoveComputed<T>) => {
+  const frag = (props: RemoveComputedAndServer<T>) => {
     return {
       element: options.wrapper ?? options.name,
       name: options.name,
